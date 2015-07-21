@@ -21,6 +21,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,6 +30,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private Camera myCamera;
     private SensorManager manager;
     private float x, y, z;
+    private List<Landmark> landmarks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
 
         manager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        landmarks = new ArrayList<>();
+        landmarks.add(new Landmark("札幌ドーム", 43.015952, 141.409529));
+        landmarks.add(new Landmark("テレビ塔", 43.061297, 141.356426));
+        landmarks.add(new Landmark("プリンスホテル", 43.055921, 141.341151));
     }
 
     @Override
@@ -119,7 +126,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         @Override
         public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
 
-            //プレビュースタート（Changedは最初にも1度は呼ばれる）
             myCamera.startPreview();
 
         }
@@ -127,7 +133,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         @Override
         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
 
-            //片付け
+            // 片付け
             myCamera.release();
             myCamera = null;
         }
@@ -168,9 +174,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             }
 
             sb.append(String.format("磁気センサー + 加速度センサー\n"));
-            sb.append(String.format("方位角:%f\n", (val[0] < 0) ? val[0] + 360 : val[0]));
-            sb.append(String.format("傾斜角:%f\n", val[1]));
-            sb.append(String.format("回転角:%f\n", val[2]));
+            sb.append(String.format("方位角%f\n", (val[0] < 0) ? val[0] + 360 : val[0]));
+            sb.append(String.format("傾斜角%f\n", val[1]));
+            sb.append(String.format("回転角%f\n", val[2]));
         }
 
         TextView tv = (TextView) findViewById(R.id.text1);
