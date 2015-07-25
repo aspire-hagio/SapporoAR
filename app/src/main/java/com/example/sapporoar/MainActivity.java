@@ -80,6 +80,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks.add(new Landmark("テレビ塔", 43.061297, 141.356426));
         landmarks.add(new Landmark("プリンスホテル", 43.055921, 141.341151));
         landmarks.add(new Landmark("ローソン", 43.056440, 141.341220));
+        landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
+
+        targetLandmark = landmarks.get(2);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -246,6 +249,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] result = new float[4];
             float[] v1 = new float[]{0, 1, 0, 0};
             Matrix.multiplyMV(result, 0, R2, 0, v1, 0);
+            result[0] *= -1;
 
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
@@ -279,6 +283,14 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     }
 
     static float getR(float[] v1, float[] v2) {
+//        System.out.println("v1 x: " + v1[0]);
+//        System.out.println("v1 y: " + v1[1]);
+//        System.out.println("v1 z: " + v1[2]);
+//        System.out.println("v1 ?: " + v1[3]);
+//        System.out.println("v2 x: " + v2[0]);
+//        System.out.println("v2 y: " + v2[1]);
+//        System.out.println("v2 z: " + v2[2]);
+//        System.out.println("v2 ?: " + v2[3]);
         return (float) Math.acos((v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]) / (Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]) * Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])));
     }
 
