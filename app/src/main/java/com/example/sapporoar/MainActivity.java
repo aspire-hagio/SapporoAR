@@ -82,7 +82,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks.add(new Landmark("ローソン", 43.056440, 141.341220));
         landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
 
-        targetLandmark = landmarks.get(2);
+        targetLandmark = landmarks.get(4);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -254,17 +254,27 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
             float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), 0, (float) (targetLandmark.getLongitude() - currentLongitude), 0};
-            float[] c = new float[4];
-            float r = (float) (getR(result, targetV) * 180 / Math.PI);
-            float n = 0;
-            for (int i = 0; i < 4; i++) {
-                n += targetV[i] * result[i];
-            }
-            sb.append(String.format("%f\n", r));
-//            sb.append(String.format("%f\n", targetV[0]));
-//            sb.append(String.format("%f\n", targetV[1]));
-//            sb.append(String.format("%f\n", targetV[2]));
-//            sb.append(String.format("%f\n", targetV[3]));
+            float[] inv = new float[16];
+            Matrix.invertM(inv, 0, R2, 0);
+            float[] target1 = new float[4];
+            Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
+//            float[] c = new float[4];
+//            float r = (float) (getR(result, targetV) * 180 / Math.PI);
+//            float n = 0;
+//            for (int i = 0; i < 4; i++) {
+//                n += targetV[i] * result[i];
+//            }
+//            sb.append(String.format("%f\n", r));
+            sb.append(String.format("%f\n", target1[0]));
+            sb.append(String.format("%f\n", target1[1]));
+            sb.append(String.format("%f\n", target1[2]));
+            sb.append(String.format("%f\n", target1[3]));
+
+            double d = target1[0];
+            double x = target1[1] / d;
+            double y = target1[2] / d;
+            sb.append(String.format("x:%f\n", x));
+            sb.append(String.format("y:%f\n", y));
 
 //            sb.append(String.format("%f\n", c[0]));
 //            sb.append(String.format("%f\n", c[1]));
@@ -278,6 +288,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         }
 
         TextView tv = (TextView) findViewById(R.id.text1);
+        tv.setTextColor(Color.RED);
         tv.setText(sb.toString());
 
     }
