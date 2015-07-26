@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -35,6 +37,7 @@ import java.util.List;
 
 public class MainActivity extends ActionBarActivity implements LocationListener, SensorEventListener {
     private SurfaceView mySurfaceView;
+    private SurfaceView surfaceViewOverlay;
     private Camera myCamera;
     private SensorManager manager;
     private float x, y, z;
@@ -72,6 +75,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         holder.addCallback(callback);
 
+        surfaceViewOverlay = (SurfaceView) findViewById(R.id.surfaceView2);
+        surfaceViewOverlay.setZOrderOnTop(true);
+        SurfaceHolder holderOverlay = surfaceViewOverlay.getHolder();
+        holderOverlay.setFormat(PixelFormat.TRANSPARENT);
+        holderOverlay.addCallback(callbackOverlay);
 
         manager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
@@ -330,5 +338,57 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         manager.registerListener(this, manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
 
+    }
+
+    private SurfaceHolder.Callback callbackOverlay = new SurfaceHolder.Callback() {
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+
+            DrawThread thread = new DrawThread(holder);
+            Thread thread2 = new Thread(thread);
+            thread2.start();
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+        }
+    };
+
+    private class DrawThread implements Runnable {
+        SurfaceHolder holder;
+        DrawThread(SurfaceHolder holder) {
+            this.holder = holder;
+        }
+
+        @Override
+        public void run() {
+            Paint paint = new Paint(Color.GREEN);
+
+            while (true)
+            {
+                Canvas canvas = holder.lockCanvas();
+                if (canvas != null) {
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setTextSize(24);
+                    paint.setColor(Color.GREEN);
+                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                    canvas.drawText(String.format("%f", _aVal[0]), 100, 100, paint);
+                    holder.unlockCanvasAndPost(canvas);
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
