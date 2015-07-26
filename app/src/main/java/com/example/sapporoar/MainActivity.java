@@ -52,6 +52,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private Landmark targetLandmark = new Landmark("札幌ドーム", 43.072726, 141.497290);
     private List<Place> places;
     private boolean gpsFlag;
+    private double targetX;
+    private double targetY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,11 +88,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks = new ArrayList<>();
         landmarks.add(new Landmark("札幌ドーム", 43.015952, 141.409529));
         landmarks.add(new Landmark("テレビ塔", 43.061297, 141.356426));
-        landmarks.add(new Landmark("プリンスホテル", 43.055921, 141.341151));
+        landmarks.add(new Landmark("プリンスホテル", 43.056060, 141.341295));
         landmarks.add(new Landmark("ローソン", 43.056440, 141.341220));
         landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
 
-        targetLandmark = landmarks.get(4);
+        targetLandmark = landmarks.get(2);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -283,6 +285,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             double y = target1[2] / d;
             sb.append(String.format("x:%f\n", x));
             sb.append(String.format("y:%f\n", y));
+            targetX = x;
+            targetY = y;
 
 //            sb.append(String.format("%f\n", c[0]));
 //            sb.append(String.format("%f\n", c[1]));
@@ -379,8 +383,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextSize(24);
                     paint.setColor(Color.GREEN);
+                    paint.setTextAlign(Paint.Align.CENTER);
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                    canvas.drawText(String.format("%f", _aVal[0]), 100, 100, paint);
+                    canvas.drawText("Target", (float) (canvas.getWidth() * targetX + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
                     holder.unlockCanvasAndPost(canvas);
                 }
                 try {
