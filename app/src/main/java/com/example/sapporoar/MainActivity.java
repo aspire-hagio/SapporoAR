@@ -91,8 +91,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks.add(new Landmark("プリンスホテル", 43.056060, 141.341295));
         landmarks.add(new Landmark("ローソン", 43.056440, 141.341220));
         landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
+        landmarks.add(new Landmark("大麻駅", 43.072726, 141.497290));
 
-        targetLandmark = landmarks.get(2);
+        targetLandmark = landmarks.get(5);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -243,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] val = new float[3];
 
             SensorManager.getRotationMatrix(R1, I, _aVal, _mVal);
-            SensorManager.remapCoordinateSystem(R1, SensorManager.AXIS_Y, SensorManager.AXIS_Z, R2);
+            SensorManager.remapCoordinateSystem(R1, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, R2);
             SensorManager.getOrientation(R2, val);
             //ラジアンを角度に変換
             for (int i = 0; i < 3; i++) {
@@ -269,12 +270,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] target1 = new float[4];
             Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
 //            float[] c = new float[4];
-//            float r = (float) (getR(result, targetV) * 180 / Math.PI);
+            float r = (float) (getR(result, targetV) * 180 / Math.PI);
 //            float n = 0;
 //            for (int i = 0; i < 4; i++) {
 //                n += targetV[i] * result[i];
 //            }
-//            sb.append(String.format("%f\n", r));
+            sb.append(String.format("%f\n", r));
             sb.append(String.format("%f\n", target1[0]));
             sb.append(String.format("%f\n", target1[1]));
             sb.append(String.format("%f\n", target1[2]));
