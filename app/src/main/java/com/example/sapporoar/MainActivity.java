@@ -52,8 +52,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private Landmark targetLandmark = new Landmark("札幌ドーム", 43.072726, 141.497290);
     private List<Place> places;
     private boolean gpsFlag;
-    private double targetX;
-    private double targetY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -262,6 +260,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             Matrix.multiplyMV(result, 0, R2, 0, v1, 0);
 //            result[0] *= -1;
 
+            for (Landmark landmark : landmarks) {
+                landmark.setScreenXY(currentLatitude, currentLongitude,R2);
+            }
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
             float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude),(float) (targetLandmark.getLongitude() - currentLongitude),  0, 0};
@@ -276,18 +277,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 //                n += targetV[i] * result[i];
 //            }
 //            sb.append(String.format("%f\n", r));
-            sb.append(String.format("%f\n", target1[0]));
-            sb.append(String.format("%f\n", target1[1]));
-            sb.append(String.format("%f\n", target1[2]));
-            sb.append(String.format("%f\n", target1[3]));
-
-            double d = target1[0];
-            double x = target1[1] / d;
-            double y = target1[2] / d;
-            sb.append(String.format("x:%f\n", x));
-            sb.append(String.format("y:%f\n", y));
-            targetX = x;
-            targetY = y;
+//            sb.append(String.format("%f\n", target1[0]));
+//            sb.append(String.format("%f\n", target1[1]));
+//            sb.append(String.format("%f\n", target1[2]));
+//            sb.append(String.format("%f\n", target1[3]));
 
 //            sb.append(String.format("%f\n", c[0]));
 //            sb.append(String.format("%f\n", c[1]));
@@ -386,7 +379,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     paint.setColor(Color.GREEN);
                     paint.setTextAlign(Paint.Align.CENTER);
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                    canvas.drawText("Target", (float) (canvas.getWidth() * targetX + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
+                    for (Landmark landmark:landmarks) {
+                        canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
+                    }
                     holder.unlockCanvasAndPost(canvas);
                 }
                 try {
