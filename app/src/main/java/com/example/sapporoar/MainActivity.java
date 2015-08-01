@@ -93,7 +93,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
         landmarks.add(new Landmark("大麻駅", 43.072726, 141.497290));
 
-        targetLandmark = landmarks.get(5);
+        targetLandmark = landmarks.get(3);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -244,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] val = new float[3];
 
             SensorManager.getRotationMatrix(R1, I, _aVal, _mVal);
-            SensorManager.remapCoordinateSystem(R1, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, R2);
+            SensorManager.remapCoordinateSystem(R1, SensorManager.AXIS_Z, SensorManager.AXIS_MINUS_X, R2);
             SensorManager.getOrientation(R2, val);
             //ラジアンを角度に変換
             for (int i = 0; i < 3; i++) {
@@ -260,22 +260,22 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] result = new float[4];
             float[] v1 = new float[]{0, 1, 0, 0};
             Matrix.multiplyMV(result, 0, R2, 0, v1, 0);
-            result[0] *= -1;
+//            result[0] *= -1;
 
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
-            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), 0, (float) (targetLandmark.getLongitude() - currentLongitude), 0};
+            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude),(float) (targetLandmark.getLongitude() - currentLongitude),  0, 0};
             float[] inv = new float[16];
             Matrix.invertM(inv, 0, R2, 0);
             float[] target1 = new float[4];
             Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
 //            float[] c = new float[4];
-            float r = (float) (getR(result, targetV) * 180 / Math.PI);
+//            float r = (float) (getR(result, targetV) * 180 / Math.PI);
 //            float n = 0;
 //            for (int i = 0; i < 4; i++) {
 //                n += targetV[i] * result[i];
 //            }
-            sb.append(String.format("%f\n", r));
+//            sb.append(String.format("%f\n", r));
             sb.append(String.format("%f\n", target1[0]));
             sb.append(String.format("%f\n", target1[1]));
             sb.append(String.format("%f\n", target1[2]));
