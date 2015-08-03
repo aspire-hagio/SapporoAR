@@ -8,6 +8,7 @@ public class Landmark {
     private double longitude;
     private double screenX;
     private double screenY;
+    private boolean visible;
 
     public Landmark(String name, double latitude, double longitude) {
         this.name = name;
@@ -41,5 +42,19 @@ public class Landmark {
 
     public double getScreenX() {
         return screenX;
+    }
+
+    public void setVisible(float[] v, double currentLatitude, double currentLongitude) {
+        float[] targetV = new float[]{(float) (latitude - currentLatitude),(float) (longitude - currentLongitude),  0, 0};
+        float r = MainActivity.getR(v, targetV);
+        if (r < Math.PI / 2) {
+            visible = true;
+        } else {
+            visible = false;
+        }
+    }
+
+    public boolean getVisible() {
+        return visible;
     }
 }

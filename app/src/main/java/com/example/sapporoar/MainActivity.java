@@ -17,9 +17,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.Matrix;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
@@ -36,22 +35,89 @@ import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity implements LocationListener, SensorEventListener {
+    //    private double currentLatitude = 43.068084;
+//    private double currentLongitude = 141.350601;
+//    private Landmark targetLandmark = new Landmark("札幌ドーム", 43.015952, 141.409529);
+    int sx = 0;
+    int sy = 0;
+    float[] _aVal;
+    float[] _mVal;
     private SurfaceView mySurfaceView;
     private SurfaceView surfaceViewOverlay;
     private Camera myCamera;
     private SensorManager manager;
     private float x, y, z;
     private List<Landmark> landmarks;
-//    private double currentLatitude = 43.068084;
-//    private double currentLongitude = 141.350601;
-//    private Landmark targetLandmark = new Landmark("札幌ドーム", 43.015952, 141.409529);
-    int sx = 0;
-    int sy = 0;
     private double currentLatitude = 43.067561;
     private double currentLongitude = 141.498406;
     private Landmark targetLandmark = new Landmark("札幌ドーム", 43.072726, 141.497290);
     private List<Place> places;
     private boolean gpsFlag;
+    //コールバック
+    private SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+
+            //CameraOpen
+            myCamera = Camera.open();
+
+            //出力をSurfaceViewに設定
+            try {
+                myCamera.setPreviewDisplay(surfaceHolder);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
+
+            myCamera.startPreview();
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+
+            // 片付け
+            myCamera.release();
+            myCamera = null;
+        }
+    };
+    private SurfaceHolder.Callback callbackOverlay = new SurfaceHolder.Callback() {
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+
+            DrawThread thread = new DrawThread(holder);
+            Thread thread2 = new Thread(thread);
+            thread2.start();
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+        }
+    };
+
+    static float getR(float[] v1, float[] v2) {
+//        System.out.println("v1 x: " + v1[0]);
+//        System.out.println("v1 y: " + v1[1]);
+//        System.out.println("v1 z: " + v1[2]);
+//        System.out.println("v1 ?: " + v1[3]);
+//        System.out.println("v2 x: " + v2[0]);
+//        System.out.println("v2 y: " + v2[1]);
+//        System.out.println("v2 z: " + v2[2]);
+//        System.out.println("v2 ?: " + v2[3]);
+        return (float) Math.acos((v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]) / (Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]) * Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +157,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         landmarks.add(new Landmark("札幌医学技術福祉歯科専門学校", 43.053556, 141.341375));
         landmarks.add(new Landmark("大麻駅", 43.072726, 141.497290));
 
-        targetLandmark = landmarks.get(3);
+        targetLandmark = landmarks.get(1);
 
         places = new ArrayList<>();
         places.add(new Place("JRタワー", 43.068084, 141.350601));
@@ -182,42 +248,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
-    //コールバック
-    private SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(SurfaceHolder surfaceHolder) {
-
-            //CameraOpen
-            myCamera = Camera.open();
-
-            //出力をSurfaceViewに設定
-            try {
-                myCamera.setPreviewDisplay(surfaceHolder);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
-
-            myCamera.startPreview();
-
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
-            // 片付け
-            myCamera.release();
-            myCamera = null;
-        }
-    };
-
-    float[] _aVal;
-    float[] _mVal;
-
     @Override
     public void onSensorChanged(SensorEvent event) {
 
@@ -256,27 +286,27 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             sb.append(String.format("回転角%f\n", val[2]));
 
             float[] result = new float[4];
-            float[] v1 = new float[]{0, 1, 0, 0};
+            float[] v1 = new float[]{1, 0, 0, 0};
             Matrix.multiplyMV(result, 0, R2, 0, v1, 0);
-//            result[0] *= -1;
 
             for (Landmark landmark : landmarks) {
-                landmark.setScreenXY(currentLatitude, currentLongitude,R2);
+                landmark.setScreenXY(currentLatitude, currentLongitude, R2);
+                landmark.setVisible(result, currentLatitude, currentLongitude);
             }
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
-            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude),(float) (targetLandmark.getLongitude() - currentLongitude),  0, 0};
+            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
             float[] inv = new float[16];
             Matrix.invertM(inv, 0, R2, 0);
             float[] target1 = new float[4];
             Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
 //            float[] c = new float[4];
-//            float r = (float) (getR(result, targetV) * 180 / Math.PI);
+            float r = (float) (getR(result, targetV) * 180 / Math.PI);
 //            float n = 0;
 //            for (int i = 0; i < 4; i++) {
 //                n += targetV[i] * result[i];
 //            }
-//            sb.append(String.format("%f\n", r));
+            sb.append(String.format("%f\n", r));
 //            sb.append(String.format("%f\n", target1[0]));
 //            sb.append(String.format("%f\n", target1[1]));
 //            sb.append(String.format("%f\n", target1[2]));
@@ -297,18 +327,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         tv.setTextColor(Color.RED);
         tv.setText(sb.toString());
 
-    }
-
-    static float getR(float[] v1, float[] v2) {
-//        System.out.println("v1 x: " + v1[0]);
-//        System.out.println("v1 y: " + v1[1]);
-//        System.out.println("v1 z: " + v1[2]);
-//        System.out.println("v1 ?: " + v1[3]);
-//        System.out.println("v2 x: " + v2[0]);
-//        System.out.println("v2 y: " + v2[1]);
-//        System.out.println("v2 z: " + v2[2]);
-//        System.out.println("v2 ?: " + v2[3]);
-        return (float) Math.acos((v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]) / (Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]) * Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])));
     }
 
     @Override
@@ -338,30 +356,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
-    private SurfaceHolder.Callback callbackOverlay = new SurfaceHolder.Callback() {
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-
-            DrawThread thread = new DrawThread(holder);
-            Thread thread2 = new Thread(thread);
-            thread2.start();
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-
-        }
-    };
-
     private class DrawThread implements Runnable {
         SurfaceHolder holder;
+
         DrawThread(SurfaceHolder holder) {
             this.holder = holder;
         }
@@ -370,8 +367,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         public void run() {
             Paint paint = new Paint(Color.GREEN);
 
-            while (true)
-            {
+            while (true) {
                 Canvas canvas = holder.lockCanvas();
                 if (canvas != null) {
                     paint.setStyle(Paint.Style.FILL);
@@ -379,8 +375,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     paint.setColor(Color.GREEN);
                     paint.setTextAlign(Paint.Align.CENTER);
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                    for (Landmark landmark:landmarks) {
-                        canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
+                    for (Landmark landmark : landmarks) {
+                        if (landmark.getVisible()) {
+                            canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
+                        }
                     }
                     holder.unlockCanvasAndPost(canvas);
                 }
