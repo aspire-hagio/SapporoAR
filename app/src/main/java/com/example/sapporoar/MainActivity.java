@@ -377,7 +377,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
                     for (Landmark landmark : landmarks) {
                         if (landmark.getVisible()) {
-                            canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), canvas.getHeight() / 2, paint);
+                            canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), (float)(canvas.getHeight() * landmark.getScreenY() + canvas.getHeight() / 2), paint);
                         }
                     }
                     holder.unlockCanvasAndPost(canvas);

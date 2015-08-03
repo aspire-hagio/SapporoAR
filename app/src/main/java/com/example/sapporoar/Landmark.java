@@ -1,5 +1,6 @@
 package com.example.sapporoar;
 
+import android.hardware.SensorManager;
 import android.opengl.Matrix;
 
 public class Landmark {
@@ -35,9 +36,16 @@ public class Landmark {
         float[] target1 = new float[4];
         Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
 
+        float[] val = new float[3];
+        SensorManager.getOrientation(r2, val);
+
         double d = target1[0];
         screenX = target1[1] / d;
-        screenY = target1[2] / d;
+        if (val[1] > 0) {
+            screenY = -1 * Math.abs(target1[2] / d);
+        } else {
+            screenY = Math.abs(target1[2] / d);
+        }
     }
 
     public double getScreenX() {
@@ -56,5 +64,9 @@ public class Landmark {
 
     public boolean getVisible() {
         return visible;
+    }
+
+    public double getScreenY() {
+        return screenY;
     }
 }
