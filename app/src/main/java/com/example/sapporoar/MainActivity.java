@@ -1,5 +1,6 @@
 package com.example.sapporoar;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -18,23 +19,26 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.Matrix;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity implements LocationListener, SensorEventListener {
+public class MainActivity extends Activity implements LocationListener, SensorEventListener {
     //    private double currentLatitude = 43.068084;
 //    private double currentLongitude = 141.350601;
 //    private Landmark targetLandmark = new Landmark("札幌ドーム", 43.015952, 141.409529);
@@ -53,6 +57,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private Landmark targetLandmark = new Landmark("札幌ドーム", 43.072726, 141.497290);
     private List<Place> places;
     private boolean gpsFlag;
+    private boolean lowpassFlag;
+    private float[] lowpassAVal;
+    private boolean medianFlag;
+    private ArrayList<Float> medianMValX = new ArrayList<>();
+    private ArrayList<Float> medianMValY = new ArrayList<>();
+    private ArrayList<Float> medianMValZ = new ArrayList<>();
     //コールバック
     private SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
         @Override
@@ -119,9 +129,25 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         return (float) Math.acos((v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]) / (Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]) * Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])));
     }
 
+    private float[] getMedianMVal() {
+        float[] result = new float[3];
+        ArrayList<Float> ary = (ArrayList<Float>) medianMValX.clone();
+        Collections.sort(ary);
+        result[0] = ary.get(ary.size() / 2);
+        ary = (ArrayList<Float>) medianMValY.clone();
+        Collections.sort(ary);
+        result[1] = ary.get(ary.size() / 2);
+        ary = (ArrayList<Float>) medianMValZ.clone();
+        Collections.sort(ary);
+        result[2] = ary.get(ary.size() / 2);
+        return result;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
 
         LocationManager mLocationManager =
@@ -163,6 +189,14 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         places.add(new Place("JRタワー", 43.068084, 141.350601));
         places.add(new Place("aspire", 43.055688, 141.342201));
         places.add(new Place("35", 43.067561, 141.498406));
+
+        Button btnMenu = (Button) findViewById(R.id.btn_menu);
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMainMenu();
+            }
+        });
     }
 
     @Override
@@ -256,10 +290,24 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             case Sensor.TYPE_ACCELEROMETER: //加速度センサー
                 _aVal = new float[3];
                 _aVal = event.values;
+                if (lowpassAVal == null) {
+                    lowpassAVal = new float[]{0, 0, 0};
+                }
+                for (int i = 0; i < 3; i++) {
+                    lowpassAVal[i] = (float) (lowpassAVal[i] * 0.9 + _aVal[i] * 0.1);
+                }
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD: //磁気センサー
                 _mVal = new float[3];
                 _mVal = event.values;
+                medianMValX.add(_mVal[0]);
+                medianMValY.add(_mVal[1]);
+                medianMValZ.add(_mVal[2]);
+                if (medianMValX.size() > 5) {
+                    medianMValX.remove(0);
+                    medianMValY.remove(0);
+                    medianMValZ.remove(0);
+                }
                 break;
         }
 
@@ -271,7 +319,15 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             float[] I = new float[16];
             float[] val = new float[3];
 
-            SensorManager.getRotationMatrix(R1, I, _aVal, _mVal);
+            if (lowpassFlag && medianFlag) {
+                SensorManager.getRotationMatrix(R1, I, lowpassAVal, getMedianMVal());
+            } else if(lowpassFlag && !medianFlag) {
+                SensorManager.getRotationMatrix(R1, I, lowpassAVal, _mVal);
+            }else if (!lowpassFlag && medianFlag) {
+                SensorManager.getRotationMatrix(R1, I, _aVal, getMedianMVal());
+            } else {
+                SensorManager.getRotationMatrix(R1, I, _aVal, _mVal);
+            }
             SensorManager.remapCoordinateSystem(R1, SensorManager.AXIS_Z, SensorManager.AXIS_MINUS_X, R2);
             SensorManager.getOrientation(R2, val);
             //ラジアンを角度に変換
@@ -356,6 +412,59 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
+    private void showMainMenu() {
+        ListView lv = new ListView(this);
+        List<String> array = new ArrayList<>();
+        array.add("現在地");
+        array.add("フィルタリング");
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, array);
+        lv.setAdapter(adapter);
+        final AlertDialog dlg = new AlertDialog.Builder(this).setView(lv).create();
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                } else if (position == 1) {
+                    showFilteringMenu();
+                }
+                dlg.dismiss();
+            }
+        });
+        dlg.show();
+    }
+
+    private void showFilteringMenu() {
+        ListView lv = new ListView(this);
+        List<String> array = new ArrayList<>();
+        array.add("なし");
+        array.add("ローパスフィルタ");
+        array.add("メディアンフィルタ");
+        array.add("ローパス・メディアン");
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, array);
+        lv.setAdapter(adapter);
+        final AlertDialog dlg = new AlertDialog.Builder(this).setView(lv).create();
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    lowpassFlag = false;
+                    medianFlag = false;
+                } else if (position == 1) {
+                    lowpassFlag = true;
+                    medianFlag = false;
+                } else if (position == 2) {
+                    lowpassFlag = false;
+                    medianFlag = true;
+                } else if (position == 3) {
+                    lowpassFlag = true;
+                    medianFlag = true;
+                }
+                dlg.dismiss();
+            }
+        });
+        dlg.show();
+    }
+
     private class DrawThread implements Runnable {
         SurfaceHolder holder;
 
@@ -377,7 +486,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
                     for (Landmark landmark : landmarks) {
                         if (landmark.getVisible()) {
-                            canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), (float)(canvas.getHeight() * landmark.getScreenY() + canvas.getHeight() / 2), paint);
+                            canvas.drawText(landmark.getName(), (float) (canvas.getWidth() * landmark.getScreenX() + canvas.getWidth() / 2), (float) (canvas.getHeight() * landmark.getScreenY() + canvas.getHeight() / 2), paint);
                         }
                     }
                     holder.unlockCanvasAndPost(canvas);
