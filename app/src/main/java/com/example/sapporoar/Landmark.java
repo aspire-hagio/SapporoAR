@@ -30,7 +30,7 @@ public class Landmark {
     }
 
     public void setScreenXY(double currentLatitude, double currentLongitude, float[] r2) {
-        float[] targetV = new float[]{(float) (latitude - currentLatitude),(float) (longitude - currentLongitude),  0, 0};
+        float[] targetV = new float[]{(float) ((latitude - currentLatitude) * 30.82), (float) ((longitude - currentLongitude) * 25.11), 0, 0};
         float[] inv = new float[16];
         Matrix.invertM(inv, 0, r2, 0);
         float[] target1 = new float[4];
@@ -53,7 +53,7 @@ public class Landmark {
     }
 
     public void setVisible(float[] v, double currentLatitude, double currentLongitude) {
-        float[] targetV = new float[]{(float) (latitude - currentLatitude),(float) (longitude - currentLongitude),  0, 0};
+        float[] targetV = new float[]{(float) ((latitude - currentLatitude) * 30.82), (float) ((longitude - currentLongitude) * 25.11), 0, 0};
         float r = MainActivity.getR(v, targetV);
         if (r < Math.PI / 2) {
             visible = true;
