@@ -346,8 +346,10 @@ public class MainActivity extends Activity implements LocationListener, SensorEv
             Matrix.multiplyMV(result, 0, R2, 0, v1, 0);
 
             for (Landmark landmark : landmarks) {
-                landmark.setScreenXY(currentLatitude, currentLongitude, R2);
-                landmark.setVisible(result, currentLatitude, currentLongitude);
+                if (myCamera != null) {
+                    landmark.setScreenXY(currentLatitude, currentLongitude, R2, myCamera.getParameters().getHorizontalViewAngle());
+                    landmark.setVisible(result, currentLatitude, currentLongitude);
+                }
             }
             //  対象地点ベクトル
 //            float[] targetV = new float[]{(float) (targetLandmark.getLatitude() - currentLatitude), (float) (targetLandmark.getLongitude() - currentLongitude), 0, 0};
@@ -363,20 +365,10 @@ public class MainActivity extends Activity implements LocationListener, SensorEv
 //                n += targetV[i] * result[i];
 //            }
             sb.append(String.format("%f\n", r));
-//            sb.append(String.format("%f\n", target1[0]));
-//            sb.append(String.format("%f\n", target1[1]));
-//            sb.append(String.format("%f\n", target1[2]));
-//            sb.append(String.format("%f\n", target1[3]));
-
-//            sb.append(String.format("%f\n", c[0]));
-//            sb.append(String.format("%f\n", c[1]));
-//            sb.append(String.format("%f\n", c[2]));
-//            sb.append(String.format("%f\n", c[3]));
-
-//            sb.append(String.format("%f\n", result[0]));
-//            sb.append(String.format("%f\n", result[1]));
-//            sb.append(String.format("%f\n", result[2]));
-//            sb.append(String.format("%f\n", result[3]));
+            if (myCamera != null) {
+                sb.append(String.format("h:%f\n", myCamera.getParameters().getHorizontalViewAngle()));
+                sb.append(String.format("v:%f\n", myCamera.getParameters().getVerticalViewAngle()));
+            }
         }
 
         TextView tv = (TextView) findViewById(R.id.text1);
