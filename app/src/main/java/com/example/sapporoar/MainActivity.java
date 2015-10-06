@@ -347,7 +347,7 @@ public class MainActivity extends Activity implements LocationListener, SensorEv
 
             for (Landmark landmark : landmarks) {
                 if (myCamera != null) {
-                    landmark.setScreenXY(currentLatitude, currentLongitude, R2, myCamera.getParameters().getHorizontalViewAngle());
+                    landmark.setScreenXY(currentLatitude, currentLongitude, R2);
                     landmark.setVisible(result, currentLatitude, currentLongitude);
                 }
             }
@@ -358,6 +358,10 @@ public class MainActivity extends Activity implements LocationListener, SensorEv
             Matrix.invertM(inv, 0, R2, 0);
             float[] target1 = new float[4];
             Matrix.multiplyMV(target1, 0, inv, 0, targetV, 0);
+            sb.append(String.format("a:%f\n", target1[0]));
+            sb.append(String.format("b:%f\n", target1[1]));
+            sb.append(String.format("c:%f\n", target1[2]));
+            sb.append(String.format("d:%f\n", target1[3]));
 //            float[] c = new float[4];
             float r = (float) (getR(result, targetV) * 180 / Math.PI);
 //            float n = 0;
